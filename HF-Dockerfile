@@ -1,0 +1,29 @@
+# 此Dockerfile仅用于huggingface space使用
+FROM denoland/deno:alpine
+
+# 设置环境变量
+ENV DENO_DIR=/deno-dir
+ENV IMAGE_DIR=/app/public/images
+
+WORKDIR /app
+
+# 创建必要的目录并设置权限
+RUN mkdir -p /app/public/images && \
+    mkdir -p $DENO_DIR && \
+    chown -R deno:deno /app && \
+    chown -R deno:deno $DENO_DIR && \
+    chmod -R 755 /app/public
+
+# 复制文件
+COPY . .
+
+# 缓存依赖
+RUN deno cache main.ts
+
+# 切换到非root用户
+USER deno
+
+EXPOSE 7860
+
+# 启动命令，包含所有必要权限
+CMD ["run", "--allow-net", "--allow-env", "--allow-read", "--allow-write", "main.ts"]
